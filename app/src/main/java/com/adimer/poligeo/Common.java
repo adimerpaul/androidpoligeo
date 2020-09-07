@@ -15,7 +15,7 @@ public class Common {
         return mLocation==null?"Unknown Location":new StringBuilder()
                 .append(mLocation.getLatitude())
                 .append("/")
-                .append(mLocation.getLatitude())
+                .append(mLocation.getLongitude())
                 .toString();
     }
 

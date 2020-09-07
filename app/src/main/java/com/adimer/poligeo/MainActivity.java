@@ -13,6 +13,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.karumi.dexter.Dexter;
@@ -25,6 +26,11 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+
+
+
+
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -33,6 +39,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     Button requestLocation,removeLocation;
     MybackgroundService mService=null;
     boolean mBound=false;
+    public TextView textView;
     private final ServiceConnection mServiceConnection=new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
@@ -52,6 +59,9 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main );
+        textView=(TextView)findViewById( R.id.textView );
+
+
 
         Dexter.withActivity(this)
                 .withPermissions(Arrays.asList(
@@ -68,6 +78,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                         requestLocation.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
+                                mService.user=textView.getText().toString();
                                 mService.requestLocationUpdates();
                             }
                         });
@@ -135,6 +146,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     .append("/")
                     .append(event.getLocation().getLongitude())
                     .toString();
+
             Toast.makeText(mService,data,Toast.LENGTH_SHORT).show();
         }
     }

@@ -30,16 +30,21 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 
 import org.greenrobot.eventbus.EventBus;
-import org.jetbrains.annotations.Nullable;
 
 //import androidx.annotation.Nullable;
+
+import com.github.nkzawa.socketio.client.IO;
+import com.github.nkzawa.socketio.client.Socket;
+
+import java.net.URISyntaxException;
+
 
 public class MybackgroundService extends Service {
     private static final String CHANNEL_ID="my_channel";
     private static final String EXTRA_STARTED_FROM_NOTIFICATION = "org.greenrobot.eventbus.EventBus"+
             ".started_from_notification";
     private final IBinder mBinder=new LocalBinder();
-    private static final long UPDATE_INTERVAL_IN_MIL=10000;
+    private static final long UPDATE_INTERVAL_IN_MIL=5000;
     private static final long FASTEST_UPDATE_INTERVAL_IN_MUL=UPDATE_INTERVAL_IN_MIL/2;
     private static final int NOTI_ID=1223;
     private boolean mChangingConfiguration=false;
@@ -51,10 +56,18 @@ public class MybackgroundService extends Service {
     private Handler mServiceHandler;
     private Location mLocation;
 
+
+
+    public String user="";
     public MybackgroundService(){
 
     }
-
+    private Socket mSocket;
+    {
+        try {
+            mSocket = IO.socket("https://deliveryoru.herokuapp.com");
+        } catch (URISyntaxException e) {}
+    }
     @Override
     public void onCreate() {
         fusedLocationProviderClient= LocationServices.getFusedLocationProviderClient(this);
@@ -65,6 +78,10 @@ public class MybackgroundService extends Service {
                 onNewLocation(locationResult.getLastLocation());
             }
         };
+        mSocket.connect();
+
+
+
         createLocationRequest();
         getLastLocation();
 
@@ -155,6 +172,8 @@ public class MybackgroundService extends Service {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setTicker(text)
                 .setWhen(System.currentTimeMillis());
+        mSocket.emit("chat message", text+"/"+user);
+
         if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
             builder.setChannelId(CHANNEL_ID);
         }
@@ -185,7 +204,7 @@ public class MybackgroundService extends Service {
         }
     }
 
-    @Nullable
+
     @Override
     public IBinder onBind(Intent intent) {
         stopForeground(true);

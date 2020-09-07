@@ -10,16 +10,22 @@
     android:gravity="center"
     tools:context="com.google.android.gms.location.sample.locationupdatesforegroundservice">
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="User1" />
+
     <Button
         android:id="@+id/request_location_updates_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="UPDATES LOCATION"/>
+        android:text="Dar mi ubicacion"/>
 
     <Button
         android:id="@+id/remove_location_updates_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="UPDATES LOCATION"/>
+        android:text="No mostrar mi ubicacion"/>
 
 </LinearLayout>
