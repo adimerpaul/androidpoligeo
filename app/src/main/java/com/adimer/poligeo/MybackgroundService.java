@@ -17,9 +17,15 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.NotificationCompat;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -40,6 +46,10 @@ import java.net.URISyntaxException;
 
 
 public class MybackgroundService extends Service {
+
+    private Retrofit retrofit;
+    private JsonPlaceHolderApi jsonPlaceHolderApi;
+
     private static final String CHANNEL_ID="my_channel";
     private static final String EXTRA_STARTED_FROM_NOTIFICATION = "org.greenrobot.eventbus.EventBus"+
             ".started_from_notification";
@@ -59,13 +69,15 @@ public class MybackgroundService extends Service {
 
 
     public String user="";
+    public Boolean sonido=true;
     public MybackgroundService(){
 
     }
     private Socket mSocket;
     {
         try {
-            mSocket = IO.socket("https://deliveryoru.herokuapp.com");
+//            mSocket = IO.socket("https://deliveryoru.herokuapp.com");
+            mSocket = IO.socket("https://policeoru.herokuapp.com/");
         } catch (URISyntaxException e) {}
     }
     @Override
@@ -94,6 +106,13 @@ public class MybackgroundService extends Service {
                     getString(R.string.app_name),NotificationManager.IMPORTANCE_DEFAULT);
             mNotificationManager.createNotificationChannel(mChannel);
         }
+
+        retrofit= new Retrofit.Builder()
+                .baseUrl( "http://200.110.50.35/api/" )
+                .addConverterFactory( GsonConverterFactory.create() )
+                .build();
+        jsonPlaceHolderApi = retrofit.create(JsonPlaceHolderApi.class);
+
     }
 
     @Override
@@ -152,8 +171,10 @@ public class MybackgroundService extends Service {
         mLocation=lastLocation;
         EventBus.getDefault().postSticky(new SendLocationToActivity(mLocation));
         //update notification content
-        if (ServiceIsRunningInForeGround(this))
+        if (ServiceIsRunningInForeGround(this)){
             mNotificationManager.notify(NOTI_ID,getNotification());
+        }
+
     }
 
     private Notification getNotification() {
@@ -162,6 +183,9 @@ public class MybackgroundService extends Service {
         intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION,true);
         PendingIntent serPendingIntent=PendingIntent.getService(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
         PendingIntent activityPendingIntent=PendingIntent.getActivity(this,0,new Intent(this,MainActivity.class),0);
+        if (sonido){
+
+        }
         NotificationCompat.Builder builder=new NotificationCompat.Builder(this)
                 .addAction(R.drawable.ic_launch_black_24dp,"Launch",activityPendingIntent)
                 .addAction(R.drawable.ic_cancel_black_24dp,"Remove",activityPendingIntent)
@@ -174,10 +198,35 @@ public class MybackgroundService extends Service {
                 .setWhen(System.currentTimeMillis());
         mSocket.emit("chat message", text+"/"+user);
 
+        String[] arrOfStr = text.split("/");
+        create(arrOfStr[0],arrOfStr[1],user);
+
         if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
             builder.setChannelId(CHANNEL_ID);
         }
         return builder.build();
+    }
+
+    private void create( String lat, String lng, String nombre) {
+        com.adimer.poligeo.Location location = new com.adimer.poligeo.Location(lat, lng, nombre);
+//        Map<String, String> fields = new HashMap<>();
+//        fields.put("lat", "25");
+//        fields.put("lng", "25");
+//        fields.put("nombre", "New Title");
+
+        Call<com.adimer.poligeo.Location> call = jsonPlaceHolderApi.createLocation(location);
+        call.enqueue(new Callback<com.adimer.poligeo.Location>() {
+            @Override
+            public void onResponse(Call<com.adimer.poligeo.Location> call, Response<com.adimer.poligeo.Location> response) {
+                Toast.makeText(getApplicationContext(), "Bien", Toast.LENGTH_LONG).show();
+            }
+            @Override
+            public void onFailure(Call<com.adimer.poligeo.Location> call, Throwable t) {
+                Toast.makeText(getApplicationContext(), t.toString(), Toast.LENGTH_LONG).show();
+                Log.e( "LOG TAG", t.toString());
+
+            }
+        });
     }
 
     private boolean ServiceIsRunningInForeGround(Context context) {

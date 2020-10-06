@@ -1,6 +1,11 @@
 package com.adimer.poligeo;
 
 import androidx.appcompat.app.AppCompatActivity;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.Manifest;
 import android.content.ComponentName;
@@ -11,8 +16,11 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,16 +33,14 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
-
-
-
-
-
 import java.net.URISyntaxException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
+    CheckBox radioButton,checkBox;
 
     Button requestLocation,removeLocation;
     MybackgroundService mService=null;
@@ -44,8 +50,13 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
             MybackgroundService.LocalBinder binder=(MybackgroundService.LocalBinder)iBinder;
+
+             radioButton=(CheckBox) findViewById( R.id.radioButton );
+            checkBox=(CheckBox) findViewById( R.id.checkBox2 );
+
             mService=binder.getService();
             mBound=true;
+
         }
 
         @Override
@@ -55,13 +66,14 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
 
         }
     };
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate( savedInstanceState );
         setContentView( R.layout.activity_main );
         textView=(TextView)findViewById( R.id.textView );
-
-
 
         Dexter.withActivity(this)
                 .withPermissions(Arrays.asList(
@@ -79,7 +91,19 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                             @Override
                             public void onClick(View v) {
                                 mService.user=textView.getText().toString();
+
+                                if(checkBox.isChecked())
+                                {
+                                    mService.sonido=true;
+                                }
+                                else
+                                {
+                                    mService.sonido=false;
+                                }
+
                                 mService.requestLocationUpdates();
+
+
                             }
                         });
                         removeLocation.setOnClickListener(new View.OnClickListener() {
@@ -146,8 +170,7 @@ public class MainActivity extends AppCompatActivity implements SharedPreferences
                     .append("/")
                     .append(event.getLocation().getLongitude())
                     .toString();
-
-            Toast.makeText(mService,data,Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mService,data,Toast.LENGTH_SHORT).show();
         }
     }
 }
